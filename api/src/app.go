@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 	"api/sql/db"
 )
 
@@ -73,12 +74,12 @@ func (a *App) Close() error {
 }
 // Create-if-not-exist all the Tables from Schema.
 func (a *App) InitSchema() {
-	data, err := os.ReadFile("../sql/schema.sql")
+	data, err := os.ReadFile("sql/schema.sql")
 	if err != nil { slog.Error("Failed to read file schema.sql"); panic(err) }
 	for stmt := range strings.SplitSeq(string(data), ";") {
 		stmt = strings.TrimSpace(stmt)
 		if stmt == "" { continue }
 		if _, err := a.DB.Exec(stmt); err != nil { slog.Error("Failed to initialize schemas"); panic(err) }
-		slog.Info("Initialized Schemas")
 	}
+	slog.Info("Initialized Schemas")
 }

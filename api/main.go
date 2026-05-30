@@ -1,13 +1,12 @@
 package main
 
 import (
-	"api/src"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
-
 	"github.com/joho/godotenv"
+	"api/src"
 )
 
 func main() {
