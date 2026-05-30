@@ -1,17 +1,62 @@
 package main
 
 import (
+	"api/src"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+
 	"github.com/joho/godotenv"
 )
 
 func main() {
 
-	// Load env.
-	err := godotenv.Load("../.env")
-	if err != nil { println("error loading env") }
+	// Initialize Slog.
+	logFile, err := os.OpenFile("tmp/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil { panic(err) }; defer logFile.Close()
+	stdoutHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+		ReplaceAttr: func (groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey { return slog.Attr {} }
+			return a
+		},
+	})
+	fileHandler := slog.NewJSONHandler(logFile, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
+	logger := slog.New(slog.NewMultiHandler(stdoutHandler, fileHandler))
+	slog.SetDefault(logger)
+	slog.Info("Initialized Logger")
+
+	// Initialize Env Config.
+	if err := godotenv.Load("../.env"); err != nil { slog.Error("Failed to initialize Env Config") }
+	config := src.LoadConfig()
+	slog.Info("Initialized Config")
 
 	// Initialize the App.
+	app, err := src.NewApp(config)
+	if err != nil { slog.Error("Failed to initialize App") }
+	defer app.Close()
+	app.InitSchema()
+	slog.Info("Initialized App")
 
-	println("hi")
+	// Initialize Router.
+	mux := http.NewServeMux()
+	// Middleware
+	var handler http.Handler = mux
+	handler = src.RequestIDMiddleware(handler)
+	handler = src.LoggerMiddleware(handler)
+	handler = src.RecovererMiddleware(handler)
+
+	// Routes
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Hello, World!")
+	})
+
+	// Start Server
+	addr := ":" + config.PORT
+	slog.Info("Initializing Server", "Address", addr, "PAYOUT_INTERVAL", config.PAYOUT_INTERVAL)
+	if err := http.ListenAndServe(addr, handler); err != nil { slog.Error("Server Error", "err", err) }
 
 }
