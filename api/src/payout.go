@@ -19,12 +19,9 @@ type PayoutBuffer struct {
 	mu sync.Mutex
 	queue PayoutQueue
 }
-
 func (b *PayoutBuffer) Enqueue(platformName, batchType, platformID string, batch MessageBatch) {
-
 	b.mu.Lock()
 	defer b.mu.Unlock()
-
 	if b.queue[platformName] == nil {
 		b.queue[platformName] = make(map[string]map[string][]MessageBatch)
 	}
@@ -33,15 +30,31 @@ func (b *PayoutBuffer) Enqueue(platformName, batchType, platformID string, batch
 	}
 	slice := b.queue[platformName][batchType][platformID]
 	b.queue[platformName][batchType][platformID] = append(slice, batch)
-
 }
-
 func (b *PayoutBuffer) Drain() PayoutQueue {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	snapshot := b.queue
 	b.queue = make(PayoutQueue)
 	return snapshot
+}
+func (b *PayoutBuffer) Snapshot() PayoutQueue {
+    b.mu.Lock()
+    defer b.mu.Unlock()
+    // deep copy so the handler doesn't hold the lock or expose internal state
+    out := make(PayoutQueue)
+    for platform, byType := range b.queue {
+        out[platform] = make(map[string]map[string][]MessageBatch)
+        for batchType, byUser := range byType {
+            out[platform][batchType] = make(map[string][]MessageBatch)
+            for platformID, batches := range byUser {
+                cp := make([]MessageBatch, len(batches))
+                copy(cp, batches)
+                out[platform][batchType][platformID] = cp
+            }
+        }
+    }
+    return out
 }
 
 // Payout cycle stuff.
