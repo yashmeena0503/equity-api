@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS coins (
   value BIGINT NOT NULL CHECK (value > 0),
   spent BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_coin_unid (unid),
-  CONSTRAINT fk_coin_user FOREIGN KEY (unid) REFERENCES users(unid)
+  INDEX idx_coin_unid (owner_unid),
+  CONSTRAINT fk_coin_user FOREIGN KEY (owner_unid) REFERENCES users(unid)
 );
 
 CREATE TABLE IF NOT EXISTS transaction_reasons (

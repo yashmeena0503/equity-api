@@ -33,11 +33,11 @@ func (w *wrappedResponseWriter) WriteHeader(statusCode int) {
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		// Custom ResponseWriter to capture the HTTP status code
+		// Custom ResponseWriter to capture the HTTP status code.
 		wrapped := &wrappedResponseWriter { ResponseWriter: w, statusCode: http.StatusOK }
 		next.ServeHTTP(wrapped, r)
 		slog.Info("http request handled", slog.Group("http",
-			slog.String("request_id", GetRequestID(r.Context())),
+			slog.String("request_id", GetRequestID(r.Context())), // TODO: comes out as ""
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
 			slog.Int("status", wrapped.statusCode),

@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+
 	"github.com/joho/godotenv"
+	"api/fn"
 	"api/src"
 )
 
@@ -42,18 +44,17 @@ func main() {
 
 	// Initialize Router.
 	mux := http.NewServeMux()
-	// Middleware
+	// Middleware.
 	var handler http.Handler = mux
 	handler = src.RequestIDMiddleware(handler)
 	handler = src.LoggerMiddleware(handler)
 	handler = src.RecovererMiddleware(handler)
 
-	// Routes
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello, World!")
-	})
+	// Routes.
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Hello, World!") })
+	mux.HandleFunc("POST /message", src.HandleRequest(app, fn.Message))
 
-	// Start Server
+	// Start Server.
 	addr := ":" + config.PORT
 	slog.Info("Initializing Server", "Address", addr, "PAYOUT_INTERVAL", config.PAYOUT_INTERVAL)
 	if err := http.ListenAndServe(addr, handler); err != nil { slog.Error("Server Error", "err", err) }
