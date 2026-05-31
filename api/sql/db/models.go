@@ -11,8 +11,9 @@ import (
 
 type Auction struct {
 	AuctionID  int32
-	TxID       int32
+	Txid       int32
 	SellerUnid string
+	WinnerUnid sql.NullString
 	Status     string
 	EndsAt     time.Time
 	CreatedAt  time.Time
@@ -20,7 +21,7 @@ type Auction struct {
 
 type Coin struct {
 	CoinID    int32
-	Unid      string
+	OwnerUnid string
 	Value     int64
 	Spent     bool
 	CreatedAt time.Time
@@ -35,33 +36,51 @@ type Configuration struct {
 type Discord struct {
 	Unid          string
 	DiscordID     string
-	MessageCount  int32
 	LastMessageAt sql.NullTime
 	CreatedAt     time.Time
 }
 
 type Minecraft struct {
-	Unid            string
-	MinecraftUuid   string
-	PlaytimeSeconds int64
-	LastActiveAt    sql.NullTime
-	CreatedAt       time.Time
+	Unid          string
+	MinecraftID   string
+	LastMessageAt sql.NullTime
+	CreatedAt     time.Time
+}
+
+type Payout struct {
+	ID             int32
+	Txid           int32
+	Unid           string
+	StartTimestamp time.Time
+	EndTimestamp   time.Time
+	MessageCount   int32
+	CreatedAt      time.Time
+}
+
+type Platform struct {
+	ID   int32
+	Name string
 }
 
 type Transaction struct {
-	TxID        int32
-	Reason      string
-	Platform    string
+	Txid        int32
+	Reason      int32
+	Platform    int32
 	InitiatedBy string
 	CreatedAt   time.Time
 }
 
 type TransactionLink struct {
 	ID        int32
-	TxID      int32
+	Txid      int32
 	CoinID    int32
 	Type      string
 	CreatedAt time.Time
+}
+
+type TransactionReason struct {
+	ID   int32
+	Name string
 }
 
 type User struct {

@@ -9,31 +9,35 @@ import (
 	"context"
 )
 
-const createUser = `-- name: CreateUser :exec
-INSERT INTO users (unid) VALUES (?)
+const userExistsByDiscordID = `-- name: UserExistsByDiscordID :one
+SELECT EXISTS(SELECT 1 FROM discord WHERE discord_id = ?) AS user_exists
 `
 
-func (q *Queries) CreateUser(ctx context.Context, unid string) error {
-	_, err := q.db.ExecContext(ctx, createUser, unid)
-	return err
+func (q *Queries) UserExistsByDiscordID(ctx context.Context, discordID string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, userExistsByDiscordID, discordID)
+	var user_exists bool
+	err := row.Scan(&user_exists)
+	return user_exists, err
 }
 
-const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM users WHERE unid = ?
+const userExistsByMinecraftID = `-- name: UserExistsByMinecraftID :one
+SELECT EXISTS(SELECT 1 FROM minecraft WHERE minecraft_id = ?) AS user_exists
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, unid string) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, unid)
-	return err
+func (q *Queries) UserExistsByMinecraftID(ctx context.Context, minecraftID string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, userExistsByMinecraftID, minecraftID)
+	var user_exists bool
+	err := row.Scan(&user_exists)
+	return user_exists, err
 }
 
-const getUser = `-- name: GetUser :one
-SELECT unid, created_at FROM users WHERE unid = ? LIMIT 1
+const userExistsByUnid = `-- name: UserExistsByUnid :one
+SELECT EXISTS(SELECT 1 FROM users WHERE unid = ?) AS user_exists
 `
 
-func (q *Queries) GetUser(ctx context.Context, unid string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, unid)
-	var i User
-	err := row.Scan(&i.Unid, &i.CreatedAt)
-	return i, err
+func (q *Queries) UserExistsByUnid(ctx context.Context, unid string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, userExistsByUnid, unid)
+	var user_exists bool
+	err := row.Scan(&user_exists)
+	return user_exists, err
 }

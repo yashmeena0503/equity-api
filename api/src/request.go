@@ -1,9 +1,10 @@
 package src
 
 import (
-	"encoding/json"
-	"net/http"
 	"context"
+	"encoding/json"
+	"log/slog"
+	"net/http"
 )
 
 // This is like a template of objects.
@@ -25,9 +26,7 @@ type MessageRequest struct {
 }
 func (r MessageRequest) validate() []string {
 	errs := r.PlatformInfo.validate()
-	if r.MessageLength <= 0 {
-		errs = append(errs, "message_length must be greater than 0")
-	} else if r.MessageLength > 500 { r.MessageLength = 500 } // NOTE: hardcoded max message_length 500
+	if r.MessageLength <= 0 {errs = append(errs, "message_length must be greater than 0")}
 	return errs
 }
 
@@ -60,7 +59,12 @@ func HandleRequest[
 		req, ok := DecodeAndValidate[T](w, r)
 		if !ok { return }
 		result, err := fn(r.Context(), app, req)
-		if err != nil { WriteErrs(w, http.StatusBadRequest, err.Error()); return }
+		// if err != nil { WriteErrs(w, http.StatusBadRequest, err.Error()); return }
+		if err != nil {
+			slog.Error("HandleRequest error", "err", err)
+			WriteErrs(w, http.StatusInternalServerError, "Something Went Wrong!")
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
 	}

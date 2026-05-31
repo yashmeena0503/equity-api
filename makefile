@@ -2,8 +2,8 @@ dev:
 	cd api && go build -o tmp && ./tmp/api
 
 # sqlc generate, .sql -> .go
-generate:
-	go tool sqlc generate
+sqlc:
+	cd api && nix develop -c go tool sqlc generate
 
 db:
 	docker compose up -d adminer

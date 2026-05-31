@@ -1,8 +1,8 @@
--- name: GetUser :one
-SELECT * FROM users WHERE unid = ? LIMIT 1;
+-- name: UserExistsByUnid :one
+SELECT EXISTS(SELECT 1 FROM users WHERE unid = ?) AS user_exists;
 
--- name: CreateUser :exec
-INSERT INTO users (unid) VALUES (?);
+-- name: UserExistsByDiscordID :one
+SELECT EXISTS(SELECT 1 FROM discord WHERE discord_id = ?) AS user_exists;
 
--- name: DeleteUser :exec
-DELETE FROM users WHERE unid = ?;
+-- name: UserExistsByMinecraftID :one
+SELECT EXISTS(SELECT 1 FROM minecraft WHERE minecraft_id = ?) AS user_exists;

@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
+
+	"api/src"
 
 	"github.com/joho/godotenv"
-	"api/fn"
-	"api/src"
 )
 
 func main() {
@@ -37,10 +39,18 @@ func main() {
 
 	// Initialize the App.
 	app, err := src.NewApp(config)
-	if err != nil { slog.Error("Failed to initialize App") }
+	if err != nil { slog.Error("Failed to initialize App"); panic(err) }
 	defer app.Close()
 	app.InitSchema()
 	slog.Info("Initialized App")
+
+	// Initialize Payout.
+	ctx, cancel := context.WithCancel(context.Background()); defer cancel()
+	interval, err := time.ParseDuration(config.PAYOUT_INTERVAL + "s")
+	if err != nil { slog.Error("bad PAYOUT_INTERVAL", "err", err); panic(err) }
+	go src.RunPayoutLoop(ctx, app, interval, src.PayoutOptions {
+		MinPending: 0,
+	})
 
 	// Initialize Router.
 	mux := http.NewServeMux()
@@ -52,7 +62,7 @@ func main() {
 
 	// Routes.
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Hello, World!") })
-	mux.HandleFunc("POST /message", src.HandleRequest(app, fn.Message))
+	mux.HandleFunc("POST /message", src.HandleRequest(app, src.HandleEndpointMessage))
 
 	// Start Server.
 	addr := ":" + config.PORT
