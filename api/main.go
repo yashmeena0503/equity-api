@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -64,13 +63,7 @@ func main() {
 	// Routes.
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Hello, World!") })
 	mux.HandleFunc("POST /message", src.HandleRequest(app, src.HandleEndpointMessage))
-	mux.HandleFunc("GET /payout", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any {
-			"pending_count": app.Payout.PendingCount(),
-			"queue": app.Payout.Snapshot(),
-		})
-	})
+	mux.HandleFunc("GET /payout", src.HandleEndpointPayout(app))
 
 	// Start Server.
 	addr := ":" + config.PORT

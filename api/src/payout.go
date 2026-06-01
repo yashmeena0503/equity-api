@@ -6,30 +6,30 @@ import (
 	"time"
 )
 
-// NOTE: What are batches ?
-// batches are the data we store to later evaluate and reward users with coins according to the data.
+// NOTE: What are bundles ?
+// bundles are the data we store to later evaluate and reward users with coins according to the data.
 // examples: messages, playtime, achievements.
 
-// TODO: make BatchType type
+// TODO: make BundleType type
 
-// platformName > batchType > platformID > batches
-type PayoutQueue map[string]map[string]map[string][]MessageBatch
+// platformName > bundleType > platformID > bundles
+type PayoutQueue map[string]map[string]map[string][]MessageBundle
 
 type PayoutBuffer struct {
 	mu sync.Mutex
 	queue PayoutQueue
 }
-func (b *PayoutBuffer) Enqueue(platformName, batchType, platformID string, batch MessageBatch) {
+func (b *PayoutBuffer) Enqueue(platformName, bundleType, platformID string, bundle MessageBundle) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.queue[platformName] == nil {
-		b.queue[platformName] = make(map[string]map[string][]MessageBatch)
+		b.queue[platformName] = make(map[string]map[string][]MessageBundle)
 	}
-	if b.queue[platformName][batchType] == nil {
-		b.queue[platformName][batchType] = make(map[string][]MessageBatch)
+	if b.queue[platformName][bundleType] == nil {
+		b.queue[platformName][bundleType] = make(map[string][]MessageBundle)
 	}
-	slice := b.queue[platformName][batchType][platformID]
-	b.queue[platformName][batchType][platformID] = append(slice, batch)
+	slice := b.queue[platformName][bundleType][platformID]
+	b.queue[platformName][bundleType][platformID] = append(slice, bundle)
 }
 func (b *PayoutBuffer) Drain() PayoutQueue {
 	b.mu.Lock()
@@ -44,13 +44,13 @@ func (b *PayoutBuffer) Snapshot() PayoutQueue {
     // deep copy so the handler doesn't hold the lock or expose internal state
     out := make(PayoutQueue)
     for platform, byType := range b.queue {
-        out[platform] = make(map[string]map[string][]MessageBatch)
-        for batchType, byUser := range byType {
-            out[platform][batchType] = make(map[string][]MessageBatch)
-            for platformID, batches := range byUser {
-                cp := make([]MessageBatch, len(batches))
-                copy(cp, batches)
-                out[platform][batchType][platformID] = cp
+        out[platform] = make(map[string]map[string][]MessageBundle)
+        for bundleType, byUser := range byType {
+            out[platform][bundleType] = make(map[string][]MessageBundle)
+            for platformID, bundles := range byUser {
+                cp := make([]MessageBundle, len(bundles))
+                copy(cp, bundles)
+                out[platform][bundleType][platformID] = cp
             }
         }
     }
@@ -60,7 +60,7 @@ func (b *PayoutBuffer) Snapshot() PayoutQueue {
 // Payout cycle stuff.
 
 type PayoutOptions struct {
-	// Minimum Pending Batches.
+	// Minimum Pending Bundles.
 	MinPending int // 0 = disable threshold
 }
 
@@ -82,8 +82,8 @@ func (b *PayoutBuffer) PendingCount() int {
 	n := 0
 	for _, byType := range b.queue {
 		for _, byUser := range byType {
-			for _, batches := range byUser {
-				n += len(batches)
+			for _, bundles := range byUser {
+				n += len(bundles)
 			}
 		}
 	}

@@ -2,36 +2,50 @@ package src
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 )
 
-type res struct {
+type response struct {
 	Result bool `json:"result"`
 	Reason string `json:"reason"`
 }
 
-type MessageBatch struct {
+type MessageBundle struct {
 	Timestamp int64 `json:"timestamp"`
 	MessageLength int `json:"message_length"`
 }
 
-func HandleEndpointMessage(ctx context.Context, app *App, req MessageRequest) (res, error) {
+func HandleEndpointMessage(ctx context.Context, app *App, req MessageRequest) (response, error) {
 
 	if req.MessageLength > 500 { req.MessageLength = 500 } // NOTE: hardcoded message length.
 
 	// Handle new Users.
 	userExists, err := app.DoesUserExists(ctx, req.PlatformName, req.PlatformID)
-	if err != nil { return res {}, fmt.Errorf("Failed to check user existence: %w", err) }
+	if err != nil { return response {}, fmt.Errorf("Failed to check user existence: %w", err) }
 	if !userExists {  } // TODO: actually handle new users.
 
 	// Create a user evaluation object.
-	batch := MessageBatch {
+	bundle := MessageBundle {
 		Timestamp: time.Now().UTC().Unix(),
 		MessageLength: req.MessageLength,
 	}
 	// Queue it.
-	app.Payout.Enqueue(req.PlatformName, "message", req.PlatformID, batch)
+	app.Payout.Enqueue(req.PlatformName, "message", req.PlatformID, bundle)
 
-	return res { Result: true, Reason: "reached end" }, nil
+	return response { Result: true, Reason: "reached end" }, nil
+}
+
+// Payout.
+
+func HandleEndpointPayout(app *App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any {
+			"pending_count": app.Payout.PendingCount(),
+			"queue": app.Payout.Snapshot(),
+		})
+	}
 }
