@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"math/rand"
 	"os"
+	"fmt"
 	"time"
 )
 
 type Config struct {
+	// Environment Variables.
 	Workers int `json:"workers"`
 	RequestPerWorker int `json:"request_per_worker"`
 	DelayBetweenRequestsMS int `json:"delay_between_requests_ms"`
@@ -15,8 +17,12 @@ type Config struct {
 	MaxMessageLength int `json:"max_message_length"`
 
 	DelayBetweenRequests time.Duration `json:"-"`
+
+	// Others
+	baseURL string
 }
 func newConfig(filename string) (Config, error) {
+
 	var config Config
 	// Read external JSON file.
 	bytes, err := os.ReadFile(filename); if err != nil { return config, err }
@@ -24,6 +30,12 @@ func newConfig(filename string) (Config, error) {
 	err = json.Unmarshal(bytes, &config); if err != nil { return config, err }
 	// Convert miliseconds integer into proper time.Duration
 	config.DelayBetweenRequests = time.Duration(config.DelayBetweenRequestsMS) * time.Millisecond
+
+	// Initialize Env.
+	port := os.Getenv("PORT"); if port == "" { port = "6767" }
+	baseURL := fmt.Sprintf("http://localhost:%s", port)
+	config.baseURL = baseURL
+
 	return config, nil
 }
 
