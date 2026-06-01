@@ -104,16 +104,17 @@ func summarise(c *Config, results <- chan result) {
 	errors := 0
 	total := 0
 	var totalDur time.Duration
+	width := len(fmt.Sprintf("%d", c.Workers))
 
 	for r := range results {
 		total ++
 		totalDur += r.duration
 		if r.err != nil {
 			errors++
-			log.Printf("[worker %d] ERROR %s %s -> %v", r.worker, r.method, r.path, r.err)
+			log.Printf("[worker %*d] ERROR %s %s -> %v", width, r.worker, r.method, r.path, r.err)
 		} else {
 			counts[r.statusCode]++
-			log.Printf("[worker %d] %s %s -> %d (%s)", r.worker, r.method, r.path, r.statusCode, r.duration.Round(time.Millisecond))
+			log.Printf("[worker %*d] %s %s -> %d (%s)", width, r.worker, r.method, r.path, r.statusCode, r.duration.Round(time.Millisecond))
 		}
 	}
 	fmt.Println("\n=== Summary ===")
