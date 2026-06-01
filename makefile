@@ -1,14 +1,18 @@
+# api
 dev:
 	cd api && go build -o tmp && ./tmp/api
-
 # sqlc generate, .sql -> .go
 sqlc:
 	cd api && nix develop -c go tool sqlc generate
 
+# sim
+s:
+	cd sim && nix develop -c go build -o tmp && ./tmp/sim
+
+# misc
 db:
 	docker compose up -d adminer
 dbx:
 	docker compose down mariadb adminer
-
 x:
 	docker compose down
