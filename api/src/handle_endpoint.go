@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// Message.
+
 type response struct {
 	Result bool `json:"result"`
 	Reason string `json:"reason"`
@@ -23,7 +25,7 @@ func HandleEndpointMessage(ctx context.Context, app *App, req MessageRequest) (r
 	if req.MessageLength > 500 { req.MessageLength = 500 } // NOTE: hardcoded message length.
 
 	// Handle new Users.
-	userExists, err := app.DoesUserExists(ctx, req.PlatformName, req.PlatformID)
+	userExists, err := app.DoesUserExist(ctx, req.PlatformName, req.PlatformID)
 	if err != nil { return response {}, fmt.Errorf("Failed to check user existence: %w", err) }
 	if !userExists {  } // TODO: actually handle new users.
 

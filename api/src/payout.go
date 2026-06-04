@@ -64,18 +64,6 @@ type PayoutOptions struct {
 	MinPending int // 0 = disable threshold
 }
 
-func RunPayoutLoop(ctx context.Context, app *App, every time.Duration, opt PayoutOptions) {
-	ticker := time.NewTicker(every)
-	defer ticker.Stop()
-
-	for {
-		select {
-			case <- ctx.Done(): return
-			case <- ticker.C: runPayoutIfNeeded(app, opt)
-		}
-	}
-}
-
 func (b *PayoutBuffer) PendingCount() int {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -88,6 +76,17 @@ func (b *PayoutBuffer) PendingCount() int {
 		}
 	}
 	return n
+}
+
+
+// Function to initialize payout loop.
+func RunPayoutLoop(ctx context.Context, app *App, every time.Duration, opt PayoutOptions) {
+	ticker := time.NewTicker(every)
+	defer ticker.Stop()
+	for { select {
+		case <- ctx.Done(): return
+		case <- ticker.C: runPayoutIfNeeded(app, opt)
+	}}
 }
 
 func runPayoutIfNeeded(app *App, opt PayoutOptions) {
