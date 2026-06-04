@@ -48,9 +48,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background()); defer cancel()
 	interval, err := time.ParseDuration(config.PAYOUT_INTERVAL + "s")
 	if err != nil { slog.Error("bad PAYOUT_INTERVAL", "err", err); panic(err) }
-	go src.RunPayoutLoop(ctx, app, interval, src.PayoutOptions {
-		MinPending: 0,
-	})
+	go src.RunPayoutScheduler(ctx, app, interval, 0)
 
 	// Initialize Router.
 	mux := http.NewServeMux()

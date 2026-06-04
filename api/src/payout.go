@@ -64,6 +64,7 @@ type PayoutOptions struct {
 	MinPending int // 0 = disable threshold
 }
 
+// Pending entries in PayoutBuffer.
 func (b *PayoutBuffer) PendingCount() int {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -78,20 +79,29 @@ func (b *PayoutBuffer) PendingCount() int {
 	return n
 }
 
-
-// Function to initialize payout loop.
-func RunPayoutLoop(ctx context.Context, app *App, every time.Duration, opt PayoutOptions) {
+// Payout Scheduler (processes payout if it's been x amount since last payout or if max threshold of PayoutBundles reached)
+// Threshold = 0 means only time based payouts.
+func RunPayoutScheduler(ctx context.Context, app *App, every time.Duration, threshold int) {
 	ticker := time.NewTicker(every)
 	defer ticker.Stop()
+	var lastPayout time.Time
 	for { select {
-		case <- ctx.Done(): return
-		case <- ticker.C: runPayoutIfNeeded(app, opt)
+	case <- ctx.Done():
+		return
+	case <- ticker.C:
+		// TODO: time since + threshold reached (so low-amount payouts aren't done)
+		if time.Since(lastPayout) >= every {
+			ProcessPayout(app)
+			lastPayout = time.Now()
+		} else if threshold > 0 && app.Payout.PendingCount() >= threshold {
+			ProcessPayout(app)
+			lastPayout = time.Now()
+		}
 	}}
 }
 
-func runPayoutIfNeeded(app *App, opt PayoutOptions) {
-	if opt.MinPending > 0 && app.Payout.PendingCount() < opt.MinPending { return }
-	snapshot := app.Payout.Drain()
-	if len(snapshot) == 0 { return }
-	// TODO: evaluateAll(snapshot)
+func ProcessPayout(app *App) {
+	queue := app.Payout.Drain()
+	if len(queue) == 0 { return }
+	// TODO: evaluateAll(app, queue)
 }
