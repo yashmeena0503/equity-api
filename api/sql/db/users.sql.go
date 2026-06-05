@@ -9,35 +9,72 @@ import (
 	"context"
 )
 
-const userExistsByDiscordID = `-- name: UserExistsByDiscordID :one
+const doesUserExistByDiscordID = `-- name: DoesUserExistByDiscordID :one
 SELECT EXISTS(SELECT 1 FROM discord WHERE discord_id = ?) AS user_exists
 `
 
-func (q *Queries) UserExistsByDiscordID(ctx context.Context, discordID string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, userExistsByDiscordID, discordID)
+func (q *Queries) DoesUserExistByDiscordID(ctx context.Context, discordID string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, doesUserExistByDiscordID, discordID)
 	var user_exists bool
 	err := row.Scan(&user_exists)
 	return user_exists, err
 }
 
-const userExistsByMinecraftID = `-- name: UserExistsByMinecraftID :one
+const doesUserExistByMinecraftID = `-- name: DoesUserExistByMinecraftID :one
 SELECT EXISTS(SELECT 1 FROM minecraft WHERE minecraft_id = ?) AS user_exists
 `
 
-func (q *Queries) UserExistsByMinecraftID(ctx context.Context, minecraftID string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, userExistsByMinecraftID, minecraftID)
+func (q *Queries) DoesUserExistByMinecraftID(ctx context.Context, minecraftID string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, doesUserExistByMinecraftID, minecraftID)
 	var user_exists bool
 	err := row.Scan(&user_exists)
 	return user_exists, err
 }
 
-const userExistsByUnid = `-- name: UserExistsByUnid :one
+const doesUserExistByUnid = `-- name: DoesUserExistByUnid :one
 SELECT EXISTS(SELECT 1 FROM users WHERE unid = ?) AS user_exists
 `
 
-func (q *Queries) UserExistsByUnid(ctx context.Context, unid string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, userExistsByUnid, unid)
+func (q *Queries) DoesUserExistByUnid(ctx context.Context, unid string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, doesUserExistByUnid, unid)
 	var user_exists bool
 	err := row.Scan(&user_exists)
 	return user_exists, err
+}
+
+const newDiscordUser = `-- name: NewDiscordUser :exec
+INSERT INTO discord (unid, discord_id) VALUES (?, ?)
+`
+
+type NewDiscordUserParams struct {
+	Unid      string
+	DiscordID string
+}
+
+func (q *Queries) NewDiscordUser(ctx context.Context, arg NewDiscordUserParams) error {
+	_, err := q.db.ExecContext(ctx, newDiscordUser, arg.Unid, arg.DiscordID)
+	return err
+}
+
+const newMinecraftUser = `-- name: NewMinecraftUser :exec
+INSERT INTO minecraft (unid, minecraft_id) VALUES (?, ?)
+`
+
+type NewMinecraftUserParams struct {
+	Unid        string
+	MinecraftID string
+}
+
+func (q *Queries) NewMinecraftUser(ctx context.Context, arg NewMinecraftUserParams) error {
+	_, err := q.db.ExecContext(ctx, newMinecraftUser, arg.Unid, arg.MinecraftID)
+	return err
+}
+
+const newUser = `-- name: NewUser :exec
+INSERT INTO users (unid) VALUES (?)
+`
+
+func (q *Queries) NewUser(ctx context.Context, unid string) error {
+	_, err := q.db.ExecContext(ctx, newUser, unid)
+	return err
 }

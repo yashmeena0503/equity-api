@@ -3,7 +3,6 @@ package src
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -25,9 +24,13 @@ func HandleEndpointMessage(ctx context.Context, app *App, req MessageRequest) (r
 	if req.MessageLength > 500 { req.MessageLength = 500 } // NOTE: hardcoded message length.
 
 	// Handle new Users.
-	userExists, err := app.DoesUserExist(ctx, req.PlatformName, req.PlatformID)
-	if err != nil { return response {}, fmt.Errorf("Failed to check user existence: %w", err) }
-	if !userExists {  } // TODO: actually handle new users.
+	userExists, err := app.DoesUserExistByPlatform(ctx, req.PlatformName, req.PlatformID)
+	if err != nil { return response{}, err }
+	if !userExists {
+		_, err := app.NewUserByPlatform(ctx, req.PlatformName, req.PlatformID)
+		if err != nil { return response{}, err }
+		return response { Result: true, Reason: "new user created" }, nil
+	}
 
 	// Create a user evaluation object.
 	bundle := MessageBundle {
@@ -37,7 +40,7 @@ func HandleEndpointMessage(ctx context.Context, app *App, req MessageRequest) (r
 	// Queue it.
 	app.Payout.Enqueue(req.PlatformName, "message", req.PlatformID, bundle)
 
-	return response { Result: true, Reason: "reached end" }, nil
+	return response { Result: true, Reason: "Enqueued" }, nil
 }
 
 // Payout.

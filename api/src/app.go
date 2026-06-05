@@ -1,13 +1,14 @@
 package src
 
 import (
-	"log/slog"
-	"strings"
-	"fmt"
-	"os"
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"api/sql/db"
+	"database/sql"
+	"fmt"
+	"log/slog"
+	"os"
+	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func getEnv(key, fallback string) string {
@@ -56,11 +57,11 @@ func NewApp(c *Config) (*App, error) {
 	database, err := sql.Open("mysql", c.DSN())
 	if err != nil {
 		slog.Error("Failed to open database connection", "err", err)
-		return nil, fmt.Errorf("open db: %w", err)
+		return nil, Err.OpenDB(err)
 	}
 	if err := database.Ping(); err != nil {
 		slog.Error("Failed to ping database", "err", err)
-		return nil, fmt.Errorf("ping db: %w", err)
+		return nil, Err.PingDB(err)
 	}
 
 	return &App {

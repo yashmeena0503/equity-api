@@ -13,13 +13,13 @@ import (
 // TODO: make BundleType type
 
 // platformName > bundleType > platformID > bundles
-type PayoutQueue map[string]map[string]map[string][]MessageBundle
+type PayoutQueue map[PlatformType]map[string]map[string][]MessageBundle
 
 type PayoutBuffer struct {
 	mu sync.Mutex
 	queue PayoutQueue
 }
-func (b *PayoutBuffer) Enqueue(platformName, bundleType, platformID string, bundle MessageBundle) {
+func (b *PayoutBuffer) Enqueue(platformName PlatformType, bundleType, platformID string, bundle MessageBundle) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.queue[platformName] == nil {
