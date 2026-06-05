@@ -35,3 +35,6 @@ func (errorsNamespace) BeginTx(cause error) error {
 func (errorsNamespace) CommitTx(cause error) error {
     return fmt.Errorf("Failed to commit transaction: %w", cause)
 }
+func (errorsNamespace) NewUnid(cause error) error {
+    return fmt.Errorf("Failed to generate new unid: %w", cause)
+}

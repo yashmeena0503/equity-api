@@ -3,11 +3,18 @@ package src
 import (
 	"api/sql/db"
 	"context"
+	"crypto/rand"
+	"time"
+
+	"github.com/oklog/ulid/v2"
 )
 
-// FIXME: get library for ts, unfinished.
-func NewUnid() string {
-	return "123"
+func NewUlid() (string, error) {
+	t := time.Now()
+	entropy := rand.Reader
+	id, err := ulid.New(ulid.Timestamp(t), entropy)
+	if err != nil { return "", Err.NewUnid(err) }
+	return id.String(), nil
 }
 
 func (a *App) DoesUserExistByPlatform(ctx context.Context, platformName PlatformType, platformID string) (bool, error) {
@@ -26,7 +33,8 @@ func (a *App) DoesUserExistByPlatform(ctx context.Context, platformName Platform
 }
 
 func (a *App) NewUserByPlatform(ctx context.Context, platformName PlatformType, platformID string) (string, error) {
-	unid := NewUnid()
+	unid, err := NewUlid()
+	if err != nil { return unid, err }
 
 	tx, err := a.DB.BeginTx(ctx, nil)
 	if err != nil { return "", Err.BeginTx(err) }
