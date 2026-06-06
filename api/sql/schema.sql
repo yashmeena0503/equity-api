@@ -70,9 +70,10 @@ CREATE TABLE IF NOT EXISTS transaction_links (
 );
 
 CREATE TABLE IF NOT EXISTS payouts (
-	id INT AUTO_INCREMENT PRIMARY KEY,
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
 	txid BIGINT NOT NULL,
 	unid CHAR(26) NOT NULL,
+  -- TODO: payouts in dates
 	start_timestamp TIMESTAMP NOT NULL,
 	end_timestamp TIMESTAMP NOT NULL,
 	message_count INT NOT NULL DEFAULT 0,
