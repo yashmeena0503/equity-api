@@ -13,7 +13,7 @@ func NewUlid() (string, error) {
 	t := time.Now()
 	entropy := rand.Reader
 	id, err := ulid.New(ulid.Timestamp(t), entropy)
-	if err != nil { return "", Err.NewUnid(err) }
+	if err != nil { return "", ErrNewUnid(err) }
 	return id.String(), nil
 }
 
@@ -22,14 +22,14 @@ func (a *App) DoesUserExistByPlatform(ctx context.Context, platformName Platform
 		// NOTE: NEW_PLATFORM
 	case PlatformDiscord:
 		result, err := a.Queries.DoesUserExistByDiscordID(ctx, platformID)
-		if err != nil { return false, Err.CheckUserExistence(err) }
+		if err != nil { return false, ErrCheckUserExistence(err) }
 		return result, nil
 	case PlatformMinecraft:
 		result, err := a.Queries.DoesUserExistByMinecraftID(ctx, platformID)
-		if err != nil { return false, Err.CheckUserExistence(err) }
+		if err != nil { return false, ErrCheckUserExistence(err) }
 		return result, nil
 	}
-	return false, Err.UnknownPlatform(string(platformName))
+	return false, ErrUnknownPlatform(string(platformName))
 }
 
 func (a *App) NewUserByPlatform(ctx context.Context, platformName PlatformType, platformID string) (string, error) {
@@ -37,24 +37,24 @@ func (a *App) NewUserByPlatform(ctx context.Context, platformName PlatformType, 
 	if err != nil { return unid, err }
 
 	tx, err := a.DB.BeginTx(ctx, nil)
-	if err != nil { return "", Err.BeginTx(err) }
+	if err != nil { return "", ErrBeginTx(err) }
 
 	qtx := a.Queries.WithTx(tx)
 	if err := qtx.NewUser(ctx, unid); err != nil {
 		_ = tx.Rollback()
-		return "", Err.NewUser(err)
+		return "", ErrNewUser(err)
 	}
 
 	switch platformName {
 		// NOTE: NEW_PLATFORM
 		case PlatformDiscord: err = qtx.NewDiscordUser(ctx, db.NewDiscordUserParams { Unid: unid, DiscordID: platformID })
 		case PlatformMinecraft: err = qtx.NewMinecraftUser(ctx, db.NewMinecraftUserParams { Unid: unid, MinecraftID: platformID })
-		default: _ = tx.Rollback(); return "", Err.UnknownPlatform(string(platformName))
+		default: _ = tx.Rollback(); return "", ErrUnknownPlatform(string(platformName))
 	}
 	if err != nil {
 		_ = tx.Rollback()
-		return "", Err.NewUserByPlatform(err)
+		return "", ErrNewUserByPlatform(err)
 	}
-	if err := tx.Commit(); err != nil { return "", Err.CommitTx(err) }
+	if err := tx.Commit(); err != nil { return "", ErrCommitTx(err) }
 	return unid, nil
 }

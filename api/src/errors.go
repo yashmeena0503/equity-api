@@ -5,36 +5,33 @@ import (
 	"net/http"
 )
 
-type errorsNamespace struct {}
-var Err = errorsNamespace {}
-
-func (errorsNamespace) UnknownPlatform(platformName string) error {
+func ErrUnknownPlatform(platformName string) error {
 	return ExpectedError {
 		Status: http.StatusBadRequest,
 		Message: fmt.Sprintf("Unknown platform: %q", platformName),
 	}
 }
-func (errorsNamespace) OpenDB(cause error) error {
+func ErrOpenDB(cause error) error {
 	return fmt.Errorf("Failed to open Database: %w", cause)
 }
-func (errorsNamespace) PingDB(cause error) error {
+func ErrPingDB(cause error) error {
     return fmt.Errorf("Failed to ping db: %w", cause)
 }
-func (errorsNamespace) NewUser(cause error) error {
+func ErrNewUser(cause error) error {
     return fmt.Errorf("Failed to create user: %w", cause)
 }
-func (errorsNamespace) CheckUserExistence(cause error) error {
+func ErrCheckUserExistence(cause error) error {
     return fmt.Errorf("Failed to check user existence: %w", cause)
 }
-func (errorsNamespace) NewUserByPlatform(cause error) error {
+func ErrNewUserByPlatform(cause error) error {
     return fmt.Errorf("Failed to create new user by platform: %w", cause)
 }
-func (errorsNamespace) BeginTx(cause error) error {
+func ErrBeginTx(cause error) error {
     return fmt.Errorf("Failed to begin transaction: %w", cause)
 }
-func (errorsNamespace) CommitTx(cause error) error {
+func ErrCommitTx(cause error) error {
     return fmt.Errorf("Failed to commit transaction: %w", cause)
 }
-func (errorsNamespace) NewUnid(cause error) error {
+func ErrNewUnid(cause error) error {
     return fmt.Errorf("Failed to generate new unid: %w", cause)
 }

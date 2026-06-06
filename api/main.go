@@ -33,7 +33,7 @@ func main() {
 	slog.Info("Initialized Logger")
 
 	// Initialize Env Config.
-	if err := godotenv.Load("../.env"); err != nil { slog.Error("Failed to initialize Env Config") }
+	if err := godotenv.Load("../.env"); err != nil { slog.Error("Failed to initialize Env Config"); panic(err) }
 	config := src.LoadConfig()
 	slog.Info("Initialized Config")
 
@@ -41,12 +41,13 @@ func main() {
 	app, err := src.NewApp(config)
 	if err != nil { slog.Error("Failed to initialize App"); panic(err) }
 	defer app.Close()
-	app.InitSchema()
+	app.InitPresetSchema()
+	app.InitPresetRows()
 	slog.Info("Initialized App")
 
 	// Initialize Payout.
 	ctx, cancel := context.WithCancel(context.Background()); defer cancel()
-	interval, err := time.ParseDuration(config.PAYOUT_INTERVAL + "s")
+	interval, err := time.ParseDuration(config.PAYOUT_INTERVAL + "s") // TODO: take input as 60s instead (support for min and hour)
 	if err != nil { slog.Error("bad PAYOUT_INTERVAL", "err", err); panic(err) }
 	go src.RunPayoutScheduler(ctx, app, interval, 0)
 
@@ -54,9 +55,9 @@ func main() {
 	mux := http.NewServeMux()
 	// Middleware.
 	var handler http.Handler = mux
-	handler = src.RequestIDMiddleware(handler)
-	handler = src.LoggerMiddleware(handler)
 	handler = src.RecovererMiddleware(handler)
+	handler = src.LoggerMiddleware(handler)
+	handler = src.RequestIDMiddleware(handler)
 
 	// Routes.
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Hello, World!") })

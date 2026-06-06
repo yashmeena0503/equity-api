@@ -57,11 +57,11 @@ func NewApp(c *Config) (*App, error) {
 	database, err := sql.Open("mysql", c.DSN())
 	if err != nil {
 		slog.Error("Failed to open database connection", "err", err)
-		return nil, Err.OpenDB(err)
+		return nil, ErrOpenDB(err)
 	}
 	if err := database.Ping(); err != nil {
 		slog.Error("Failed to ping database", "err", err)
-		return nil, Err.PingDB(err)
+		return nil, ErrPingDB(err)
 	}
 
 	return &App {
@@ -76,7 +76,7 @@ func (a *App) Close() error {
 	return a.DB.Close()
 }
 // Create-if-not-exist all the Tables from Schema.
-func (a *App) InitSchema() {
+func (a *App) InitPresetSchema() {
 	data, err := os.ReadFile("sql/schema.sql")
 	if err != nil { slog.Error("Failed to read file schema.sql"); panic(err) }
 	for stmt := range strings.SplitSeq(string(data), ";") {
@@ -84,5 +84,18 @@ func (a *App) InitSchema() {
 		if stmt == "" { continue }
 		if _, err := a.DB.Exec(stmt); err != nil { slog.Error("Failed to initialize schemas"); panic(err) }
 	}
-	slog.Info("Initialized Schemas")
+	slog.Info("Initialized Preset Schemas")
+}
+func (a *App) InitPresetRows() {
+	rows := []string {
+		// TODO: fill out these
+		`INSERT IGNORE INTO transaction_reasons (name) VALUES ('message_payout')`,
+	}
+	for _, stmt := range rows {
+		if _, err := a.DB.Exec(stmt); err != nil {
+			slog.Error("Failed to initialize preset row", "stmt", stmt, "err", err)
+			panic(err)
+		}
+	}
+	slog.Info("Initialized Preset Rows")
 }

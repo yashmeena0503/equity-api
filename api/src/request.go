@@ -24,7 +24,7 @@ func (p *PlatformType) UnmarshalJSON(b []byte) error {
 	case PlatformDiscord, PlatformMinecraft:
 		*p = PlatformType(s); return nil
 	default:
-		return Err.UnknownPlatform(s)
+		return ErrUnknownPlatform(s)
 	}
 }
 
