@@ -58,3 +58,18 @@ func (a *App) NewUserByPlatform(ctx context.Context, platformName PlatformType, 
 	if err := tx.Commit(); err != nil { return "", ErrCommitTx(err) }
 	return unid, nil
 }
+
+func getUnidByPlatform(ctx context.Context, q *db.Queries, platformName PlatformType, platformId string) (string, error) {
+	switch platformName {
+	// NOTE: NEW_PLATFORM
+	case PlatformDiscord: return q.GetUnidByDiscordId(ctx, platformId)
+	case PlatformMinecraft: return q.GetUnidByMinecraftId(ctx, platformId)
+	}
+	return "", ErrUnknownPlatform(string(platformName))
+}
+func (a *App) GetUnidByPlatform(ctx context.Context, platformName PlatformType, platformId string) (string, error) {
+	return getUnidByPlatform(ctx, a.Queries, platformName, platformId)
+}
+func (a *App) GetUnidByPlatformTx(ctx context.Context, qtx *db.Queries, platformName PlatformType, platformId string) (string, error) {
+	return getUnidByPlatform(ctx, qtx, platformName, platformId)
+}

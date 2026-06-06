@@ -11,6 +11,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const ADMIN_UNID = "00000000000000000000000000"
+
 func getEnv(key, fallback string) string {
 	if val, ok := os.LookupEnv(key); ok { return val }
 	return fallback
@@ -88,9 +90,21 @@ func (a *App) InitPresetSchema() {
 }
 func (a *App) InitPresetRows() {
 	rows := []string {
-		// TODO: fill out these
-		`INSERT IGNORE INTO transaction_reasons (name) VALUES ('message_payout')`,
 	}
+
+	// admin user entry
+	rows = append(rows, fmt.Sprintf("INSERT IGNORE INTO users (unid) VALUES ('%s')", ADMIN_UNID))
+
+	// platforms
+	for _, platform := range PlatformTypes {
+		rows = append(rows, fmt.Sprintf("INSERT IGNORE INTO platform_types (name) VALUES ('%s')", platform))
+	}
+
+	// transaction_reasons
+	for _, transaction_reason := range TransactionReasons {
+		rows = append(rows, fmt.Sprintf("INSERT IGNORE INTO transaction_reasons (name) VALUES ('%s')", transaction_reason))
+	}
+
 	for _, stmt := range rows {
 		if _, err := a.DB.Exec(stmt); err != nil {
 			slog.Error("Failed to initialize preset row", "stmt", stmt, "err", err)

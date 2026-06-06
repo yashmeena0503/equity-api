@@ -47,7 +47,7 @@ func main() {
 
 	// Initialize Payout.
 	ctx, cancel := context.WithCancel(context.Background()); defer cancel()
-	interval, err := time.ParseDuration(config.PAYOUT_INTERVAL + "s") // TODO: take input as 60s instead (support for min and hour)
+	interval, err := time.ParseDuration(config.PAYOUT_INTERVAL)
 	if err != nil { slog.Error("bad PAYOUT_INTERVAL", "err", err); panic(err) }
 	go src.RunPayoutScheduler(ctx, app, interval, 0)
 

@@ -8,12 +8,6 @@ import (
 	"net/http"
 )
 
-type PlatformType string
-const (
-	// NOTE: NEW_PLATFORM, wherever this note is mentioned, the new platform switch-cases are to be updated.
-	PlatformDiscord PlatformType = "discord"
-	PlatformMinecraft PlatformType = "minecraft"
-)
 func (p *PlatformType) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {

@@ -1,38 +1,14 @@
 package src
 
 import (
+	"api/sql/db"
 	"context"
+	"fmt"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
 )
-
-// NOTE: What are activities ?
-// activities are ways to earn equity or other stuff.
-// there are ActivityType, Examples: Messages, Playtime, Achievements.
-// then there are ActivityObjects, which are the instances of the activity held onto the PayoutQueue
-// to be evaluated and rewarded to the activity initiator later.
-
-type ActivityType string
-const (
-	// NOTE: NEW_ACTIVITY
-	ActivityTypeMessage ActivityType = "message"
-)
-type ActivityObject interface {
-	Type() ActivityType
-	OccuredAt() time.Time
-}
-
-// NOTE: NEW_ACTIVITY
-
-type ActivityObjectMessage struct {
-	Timestamp time.Time `json:"timestamp"`
-	MessageLength int `json:"message_length"`
-}
-func (a ActivityObjectMessage) Type() ActivityType { return ActivityTypeMessage }
-func (a ActivityObjectMessage) OccuredAt() time.Time { return a.Timestamp }
-
-// END OF NEW_ACTIVITY
 
 // platformName > activityType > platformID > activityObject
 type PayoutQueue map[PlatformType]map[ActivityType]map[string][]ActivityObject
@@ -114,26 +90,79 @@ func RunPayoutScheduler(ctx context.Context, app *App, every time.Duration, thre
 		go func() {
 			running.Store(true)
 			defer running.Store(false)
-			ProcessPayout(ctx, app)
+			err := ProcessPayout(ctx, app)
+			if err != nil { slog.Error("Failed to process payout", "err", err) }
 		}()
 	}}
 }
 
-func ProcessPayout(ctx context.Context, app *App) {
+func ProcessPayout(ctx context.Context, app *App) error {
 	queue := app.Payout.Drain()
-	if len(queue) == 0 { return }
+	if len(queue) == 0 { return ErrEmptyPayout() }
 
+	// begin db transaction
+	dbtx, err := app.DB.BeginTx(ctx, nil)
+	if err != nil { return ErrBeginTx(err) }
+	qtx := app.Queries.WithTx(dbtx)
 	for platform, activityByType := range queue {
 		for activityType, activityByUser := range activityByType {
-			for platformID, activityObject := range activityByUser {
 
-				_ = platform
-				_ = activityType
-				_ = platformID
-				_ = activityObject
+			// fetch stuff
+			reason, err := qtx.GetTransactionReasonID(ctx, string(ActivityTypeToGenesisTransactionReasons[activityType]))
+			// TODO: error
+			if err != nil { dbtx.Rollback(); return fmt.Errorf("GetTransactionReasonID") }
+			// TODO: error
+			platformTypeID, err := qtx.GetPlatformTypeID(ctx, string(platform))
+			if err != nil { dbtx.Rollback(); return fmt.Errorf("GetPlatformTypeID") }
+			// create new transaction, get txid
+			txidResult, err := qtx.NewTransaction(ctx, db.NewTransactionParams{
+				Reason: reason,
+				Platform: platformTypeID,
+				InitiatedBy: ADMIN_UNID,
+			}); if err != nil { dbtx.Rollback(); return ErrNewTransaction(err) }
+			txid, err := txidResult.LastInsertId(); if err != nil { dbtx.Rollback(); return ErrLastInsertId(err) }
 
+			// evaluate payout amount per user
+			for platformID, activityObjects := range activityByUser {
+				var coinValue int64
+				var messageCount int32
+
+				// evaluate amount from activityObject
+				// NOTE: NEW_ACTIVITY
+				switch activityType {
+				case ActivityTypeMessage:
+					// TODO: implement using timestamp aka time-gap
+					for _, object := range activityObjects {
+						msg := object.(ActivityObjectMessage)
+						messageCount += int32(msg.MessageLength)
+					}
+					coinValue = int64(messageCount)
+				}; if coinValue <= 0 { continue }
+
+				// get unid
+				unid, err := app.GetUnidByPlatformTx(ctx, qtx, platform, platformID)
+				if err != nil { dbtx.Rollback(); return ErrGetUnidByPlatform(err) }
+				// create coin
+				coinResult, err := qtx.NewCoin(ctx, db.NewCoinParams{ OwnerUnid: unid, Value: coinValue })
+				if err != nil { dbtx.Rollback(); return ErrNewCoin(err) }
+				coinId, err := coinResult.LastInsertId()
+				if err != nil { dbtx.Rollback(); return ErrLastInsertId(err) }
+				// create transaction_link
+				txlinkResult, err := qtx.NewTransactionLink(ctx, db.NewTransactionLinkParams{
+					Txid: txid,
+					CoinID: coinId,
+					LinkType: TransactionLinkTypeOutput,
+				})
+				if err != nil { dbtx.Rollback(); return ErrNewTransactionLink(err) }
+				txlink, err := txlinkResult.LastInsertId()
+				if err != nil { dbtx.Rollback(); return ErrLastInsertId(err) }
+				// create payout row
+				err = qtx.NewPayout(ctx, db.NewPayoutParams{ Txlink: txlink, MessageCount: messageCount })
+				if err != nil { dbtx.Rollback(); return ErrNewPayout(err) }
 			}
 		}
 	}
-
+	// end db transaction
+	if err := dbtx.Commit(); err != nil { dbtx.Rollback(); return ErrCommitTx(err) }
+	return nil
 }

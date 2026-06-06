@@ -15,3 +15,27 @@ INSERT INTO discord (unid, discord_id) VALUES (?, ?);
 
 -- name: NewMinecraftUser :exec
 INSERT INTO minecraft (unid, minecraft_id) VALUES (?, ?);
+
+-- name: NewTransaction :execresult
+INSERT INTO transactions (reason, platform, initiated_by) VALUES (?, ?, ?);
+
+-- name: NewCoin :execresult
+INSERT INTO coins (owner_unid, value) VALUES (?, ?);
+
+-- name: NewTransactionLink :execresult
+INSERT INTO transaction_links (txid, coin_id, link_type) VALUES (?, ?, ?);
+
+-- name: NewPayout :exec
+INSERT INTO payouts (txlink, message_count) VALUES (?, ?);
+
+-- name: GetTransactionReasonID :one
+SELECT id FROM transaction_reasons WHERE name = ? LIMIT 1;
+
+-- name: GetPlatformTypeID :one
+SELECT id FROM platform_types WHERE name = ? LIMIT 1;
+
+-- name: GetUnidByDiscordId :one
+SELECT unid FROM discord WHERE discord_id = ? LIMIT 1;
+
+-- name: GetUnidByMinecraftId :one
+SELECT unid FROM minecraft WHERE minecraft_id = ? LIMIT 1;

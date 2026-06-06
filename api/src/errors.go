@@ -35,3 +35,24 @@ func ErrCommitTx(cause error) error {
 func ErrNewUnid(cause error) error {
     return fmt.Errorf("Failed to generate new unid: %w", cause)
 }
+func ErrLastInsertId(cause error) error {
+	return fmt.Errorf("Failed to fetch last insert id: %w", cause)
+}
+func ErrNewTransaction(cause error) error {
+	return fmt.Errorf("Failed to create new transaction row: %w", cause)
+}
+func ErrNewCoin(cause error) error {
+	return fmt.Errorf("Failed to create new coin row: %w", cause)
+}
+func ErrNewTransactionLink(cause error) error {
+	return fmt.Errorf("Failed to create new transaction_links row: %w", cause)
+}
+func ErrNewPayout(cause error) error {
+	return fmt.Errorf("Failed to create new payouts row: %w", cause)
+}
+func ErrGetUnidByPlatform(cause error) error {
+	return fmt.Errorf("Failed to get unid by platform: %w", cause)
+}
+func ErrEmptyPayout() error {
+	return fmt.Errorf("Empty Payout Buffer")
+}

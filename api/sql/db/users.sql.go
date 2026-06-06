@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const doesUserExistByDiscordID = `-- name: DoesUserExistByDiscordID :one
@@ -42,6 +43,63 @@ func (q *Queries) DoesUserExistByUnid(ctx context.Context, unid string) (bool, e
 	return user_exists, err
 }
 
+const getPlatformTypeID = `-- name: GetPlatformTypeID :one
+SELECT id FROM platform_types WHERE name = ? LIMIT 1
+`
+
+func (q *Queries) GetPlatformTypeID(ctx context.Context, name string) (int8, error) {
+	row := q.db.QueryRowContext(ctx, getPlatformTypeID, name)
+	var id int8
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getTransactionReasonID = `-- name: GetTransactionReasonID :one
+SELECT id FROM transaction_reasons WHERE name = ? LIMIT 1
+`
+
+func (q *Queries) GetTransactionReasonID(ctx context.Context, name string) (int32, error) {
+	row := q.db.QueryRowContext(ctx, getTransactionReasonID, name)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getUnidByDiscordId = `-- name: GetUnidByDiscordId :one
+SELECT unid FROM discord WHERE discord_id = ? LIMIT 1
+`
+
+func (q *Queries) GetUnidByDiscordId(ctx context.Context, discordID string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getUnidByDiscordId, discordID)
+	var unid string
+	err := row.Scan(&unid)
+	return unid, err
+}
+
+const getUnidByMinecraftId = `-- name: GetUnidByMinecraftId :one
+SELECT unid FROM minecraft WHERE minecraft_id = ? LIMIT 1
+`
+
+func (q *Queries) GetUnidByMinecraftId(ctx context.Context, minecraftID string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getUnidByMinecraftId, minecraftID)
+	var unid string
+	err := row.Scan(&unid)
+	return unid, err
+}
+
+const newCoin = `-- name: NewCoin :execresult
+INSERT INTO coins (owner_unid, value) VALUES (?, ?)
+`
+
+type NewCoinParams struct {
+	OwnerUnid string
+	Value     int64
+}
+
+func (q *Queries) NewCoin(ctx context.Context, arg NewCoinParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, newCoin, arg.OwnerUnid, arg.Value)
+}
+
 const newDiscordUser = `-- name: NewDiscordUser :exec
 INSERT INTO discord (unid, discord_id) VALUES (?, ?)
 `
@@ -68,6 +126,48 @@ type NewMinecraftUserParams struct {
 func (q *Queries) NewMinecraftUser(ctx context.Context, arg NewMinecraftUserParams) error {
 	_, err := q.db.ExecContext(ctx, newMinecraftUser, arg.Unid, arg.MinecraftID)
 	return err
+}
+
+const newPayout = `-- name: NewPayout :exec
+INSERT INTO payouts (txlink, message_count) VALUES (?, ?)
+`
+
+type NewPayoutParams struct {
+	Txlink       int64
+	MessageCount int32
+}
+
+func (q *Queries) NewPayout(ctx context.Context, arg NewPayoutParams) error {
+	_, err := q.db.ExecContext(ctx, newPayout, arg.Txlink, arg.MessageCount)
+	return err
+}
+
+const newTransaction = `-- name: NewTransaction :execresult
+INSERT INTO transactions (reason, platform, initiated_by) VALUES (?, ?, ?)
+`
+
+type NewTransactionParams struct {
+	Reason      int32
+	Platform    int8
+	InitiatedBy string
+}
+
+func (q *Queries) NewTransaction(ctx context.Context, arg NewTransactionParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, newTransaction, arg.Reason, arg.Platform, arg.InitiatedBy)
+}
+
+const newTransactionLink = `-- name: NewTransactionLink :execresult
+INSERT INTO transaction_links (txid, coin_id, link_type) VALUES (?, ?, ?)
+`
+
+type NewTransactionLinkParams struct {
+	Txid     int64
+	CoinID   int64
+	LinkType string
+}
+
+func (q *Queries) NewTransactionLink(ctx context.Context, arg NewTransactionLinkParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, newTransactionLink, arg.Txid, arg.CoinID, arg.LinkType)
 }
 
 const newUser = `-- name: NewUser :exec
