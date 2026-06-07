@@ -18,7 +18,7 @@
             ];
 
             shellHook = ''
-              echo "Equity Shell Initialized"
+              echo "Equity Api Shell Initialized"
             '';
           };
         });
