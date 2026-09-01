@@ -1,0 +1,13 @@
+{
+  "base_url": "http://localhost:6767",
+  "platforms": {
+    "discord": [
+      "kaicenat",
+      "ishowspeed",
+      "kato_junichi0817",
+      "rayan_psnn",
+      "arky",
+      "bonnie"
+    ]
+  }
+}
