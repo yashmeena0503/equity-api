@@ -1,3 +1,4 @@
+-- TODO: use unsigned, and bigint
 CREATE TABLE IF NOT EXISTS users (
   unid CHAR(26) PRIMARY KEY, -- unid = Unique id of the user
   timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
