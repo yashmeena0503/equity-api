@@ -109,9 +109,9 @@ func ProcessPayout(ctx context.Context, app *App) error {
 
 			// fetch stuff
 			reason, err := qtx.GetTransactionReasonID(ctx, string(ActivityTypeToGenesisTransactionReasons[activityType]))
-			// TODO: error
+			// TODO: handle error
 			if err != nil { dbtx.Rollback(); return fmt.Errorf("GetTransactionReasonID") }
-			// TODO: error
+			// TODO: handle error
 			platformTypeID, err := qtx.GetPlatformTypeID(ctx, string(platform))
 			if err != nil { dbtx.Rollback(); return fmt.Errorf("GetPlatformTypeID") }
 			// create new transaction, get txid
