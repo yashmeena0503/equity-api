@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
-import User from "./pages/User";
+import NodeGraph from "./pages/NodeGraph";
 import Transactions from "./pages/Transactions";
 import Payouts from "./pages/Payouts";
 
@@ -13,8 +13,8 @@ function App() {
 
         <main className="main">
           <Routes>
-            <Route path="/" element={<Navigate to="/user" replace />} />
-            <Route path="/user" element={<User />} />
+            <Route path="/" element={<Navigate to="/nodegraph" replace />} />
+            <Route path="/nodegraph" element={<NodeGraph />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/payouts" element={<Payouts />} />
           </Routes>

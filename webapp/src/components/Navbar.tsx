@@ -8,8 +8,8 @@ function Navbar() {
       </div>
 
       <div className="navbar-links">
-        <NavLink to="/user">
-          User
+        <NavLink to="/nodegraph">
+          NodeGraph
         </NavLink>
 
         <NavLink to="/transactions">
