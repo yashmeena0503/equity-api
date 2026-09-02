@@ -55,6 +55,7 @@ func main() {
 	mux := http.NewServeMux()
 	// Middleware.
 	var handler http.Handler = mux
+	handler = src.CORSMiddleware(handler)
 	handler = src.RecovererMiddleware(handler)
 	handler = src.LoggerMiddleware(handler)
 	handler = src.RequestIDMiddleware(handler)
