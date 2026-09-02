@@ -21,10 +21,10 @@ func main() {
 
 	for msg := range messages {
 		slog.Info("message received",
-			"channel", msg.Channel,
-			"platform", msg.PlatformName,
+			// "channel", msg.Channel,
+			// "platform", msg.PlatformName,
 			"user", msg.Username,
-			"length", len(msg.Text),
+			// "length", len(msg.Text),
 		)
 
 		req := MessageRequest{

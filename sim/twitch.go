@@ -17,7 +17,7 @@ func StartTwitch(out chan<- TwitchMessage, platforms map[string][]string) {
 
 			client.Join(channel)
 
-			slog.Info("joined twitch channel",
+			slog.Debug("joined twitch channel",
 				"channel", channel,
 				"platform", platform,
 			)
