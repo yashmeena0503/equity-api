@@ -1,7 +1,0 @@
-{
-	"workers": 10,
-	"request_per_worker": 50,
-	"delay_between_requests_ms": 50,
-	"platform_names": [ "discord", "minecraft" ],
-	"max_message_length": 500
-}
