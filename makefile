@@ -9,6 +9,10 @@ sqlc:
 s:
 	cd sim && nix develop -c go build -o tmp/ && ./tmp/sim
 
+# webapp
+web:
+	cd webapp && npm run dev
+
 # misc
 db:
 	docker compose up -d adminer

@@ -15,6 +15,7 @@
           default = pkgs.mkShell {
             packages = with pkgs; [
               go
+              nodejs_24
             ];
 
             shellHook = ''
