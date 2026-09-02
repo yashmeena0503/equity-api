@@ -61,8 +61,10 @@ func main() {
 
 	// Routes.
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "Hello, World!") })
-	mux.HandleFunc("POST /message", src.HandleRequest(app, src.HandleEndpointMessage))
-	mux.HandleFunc("GET /payout", src.HandleEndpointPayout(app))
+	// equity api routes, for other equity apps to use
+	mux.HandleFunc("POST /api/equity/message", src.HandleRequest(app, src.HandleEndpointMessage))
+	// webapp api routes for the equity webapp, for analytics and statistics
+	mux.HandleFunc("GET /api/webapp/pending-payouts", src.HandleEndpointPayout(app))
 
 	// Start Server.
 	addr := ":" + config.PORT

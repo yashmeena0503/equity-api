@@ -26,7 +26,7 @@ func (c *APIClient) SendMessage(req MessageRequest) error {
 	}
 
 	resp, err := c.Client.Post(
-		c.BaseURL+"/message",
+		c.BaseURL+"/api/equity/message",
 		"application/json",
 		bytes.NewReader(body),
 	)
