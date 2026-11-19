@@ -19,3 +19,28 @@ services:
       - mariadb
     ports:
       - "8080:8080"
+
+  # TODO: add api container here
+
+  webapp:
+    build:
+      context: ./webapp
+      target: prod
+    container_name: webapp
+    environment:
+      VITE_API_URL: "http://localhost:${PORT}"
+
+  webapp-dev:
+    build:
+      context: ./webapp
+      target: dev
+    container_name: webapp-dev
+    environment:
+      VITE_API_URL: "http://localhost:${PORT}"
+    volumes:
+      - ./webapp:/app
+      # TODO: what the hell does this do
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "5173:5173"

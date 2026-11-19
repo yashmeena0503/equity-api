@@ -4,3 +4,8 @@ using this for now
 time based 48-bit timestamp, 80 bits of entropy
 internally 128 bit or 16 byte
 or 26 char string using crockford base32
+
+* TODO
+https://recharts.github.io/
+https://reactflow.dev/
+rename project to magi

@@ -55,6 +55,7 @@ func main() {
 	mux := http.NewServeMux()
 	// Middleware.
 	var handler http.Handler = mux
+	handler = src.CORSMiddleware(handler)
 	handler = src.RecovererMiddleware(handler)
 	handler = src.LoggerMiddleware(handler)
 	handler = src.RequestIDMiddleware(handler)
@@ -65,6 +66,7 @@ func main() {
 	mux.HandleFunc("POST /api/equity/message", src.HandleRequest(app, src.HandleEndpointMessage))
 	// webapp api routes for the equity webapp, for analytics and statistics
 	mux.HandleFunc("GET /api/webapp/pending-payouts", src.HandleEndpointPayout(app))
+	mux.HandleFunc("GET /api/webapp/user/{unid}", src.HandleEndpointDoesUserExistByUnid(app))
 
 	// Start Server.
 	addr := ":" + config.PORT
